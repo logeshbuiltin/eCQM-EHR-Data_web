@@ -1,0 +1,582 @@
+<section fxLayout="column" fxFlexAlign="stretch">
+    <nav class="navbar custom-navbar bg-faded main-header">
+        <div class="text-margin">
+            <p>eCQM EHR Data Review</p>
+        </div>
+    </nav>
+    <div class="patient-detail">
+        <span class="pselected">Selected Patient: </span>
+        <div *ngIf="patientId" style="display: contents;">
+            <span class="pdetails">{{patientName}} <span class="pdetails"> | </span><span class="pdetails">{{patientMrn}}</span></span>
+        </div>
+        <input (ngModelChange)="searchText($event)" 
+                [(ngModel)]="patientSearch" 
+                placeholder="Search Patient" 
+                matInput 
+                class="right-align"
+                [matAutocomplete]="auto">
+                <!-- CREATE AUTO COMPLETE PANEL WITH OPTIONS. -->
+        <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectPatient($event)">
+            <mat-option *ngFor="let patient of patientDetails" [value]="patient.patientData">
+                {{ patient.patientData }}
+            </mat-option>
+        </mat-autocomplete>
+    </div>
+    <div class="example-container">
+        <mat-tab-group (selectedTabChange)="tabClick($event)">
+            <mat-tab label="Patient Info"> 
+                <div class="example-container mat-elevation-z8">
+                    <h3 class="header-alignment">Patient Details:</h3>
+                    <form [formGroup]="formPatient">
+                        <mat-grid-list cols="12" rowHeight="65px">
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline" [floatLabel]="floatLabelControl.value">
+                                    <mat-label>Full Name</mat-label>
+                                    <input type="text" [(ngModel)]="pName" name="nameField" class="input-text" matInput formControlName="pName" placeholder="Firstname Lastname" required=true>
+                                  </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline" [floatLabel]="floatLabelControl.value">
+                                    <mat-label>Age</mat-label>
+                                    <div class="patient-display">
+                                        <input type="number" [(ngModel)]="pAge" class="input-text" matInput formControlName="pAge" placeholder="Age in years" required=true>
+                                        <span>Y</span>
+                                    </div>
+                                  </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline"
+                                [hideRequiredMarker]="hideRequiredControl.value"
+                                [floatLabel]="floatLabelControl.value">
+                                <mat-select required=true [(ngModel)]="pGender" formControlName="pGender">
+                                    <mat-option *ngFor="let gender of genderList" [value]="gender.value">
+                                        {{gender.view}}
+                                      </mat-option>
+                                </mat-select>
+                                <mat-label><mat-icon>person</mat-icon> Gender </mat-label>
+                                </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline" [floatLabel]="floatLabelControl.value">
+                                    <mat-label>MRN</mat-label>
+                                    <input type="text" [(ngModel)]="pMrno" class="input-text" formControlName="pMrno" matInput placeholder="MR Number" required=true>
+                                  </mat-form-field>
+                            </mat-grid-tile>
+                        </mat-grid-list>
+                    </form>
+                    <h3 class="header-alignment">Encounter Details:</h3>
+                    <form [formGroup]="formEncounter">
+                        <mat-grid-list cols="12" rowHeight="65px">
+                            <mat-grid-tile [colspan]="4">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Encounter Type</mat-label>
+                                    <mat-select required=true [(ngModel)]="encReason" formControlName="encReason">
+                                        <mat-option *ngFor="let enc of encounterList" [value]="enc.value">
+                                            {{enc.view}}
+                                          </mat-option>
+                                    </mat-select>
+                                  </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Encounter Date</mat-label>
+                                    <input formControlName="encDate" [(ngModel)]="encDate" matInput [matDatepicker]="picker5">
+                                    <mat-datepicker-toggle matSuffix [for]="picker5"></mat-datepicker-toggle>
+                                    <mat-datepicker #picker5></mat-datepicker>
+                                 </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="4">
+                                <mat-form-field class="full-width" appearance="outline"
+                                [hideRequiredMarker]="hideRequiredControl.value"
+                                [floatLabel]="floatLabelControl.value">
+                                <mat-select required=true [(ngModel)]="encDoctor" formControlName="encDoctor">
+                                    <mat-option *ngFor="let doc of doctorList" [value]="doc.value">
+                                        {{doc.view}}
+                                      </mat-option>
+                                </mat-select>
+                                <mat-label>Doctor Name</mat-label>
+                                </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="1">
+                                <button
+                                    class="btnOrange"
+                                    mat-mini-fab
+                                    data-automation-attribute="button-add-service"
+                                    (click)="addEncounterDetails()"
+                                >
+                                <mat-icon style="height: 25px; width: 50px;" matTooltip="Add Service">add</mat-icon>
+                                </button>
+                            </mat-grid-tile>
+                        </mat-grid-list>
+                    </form>
+                    <div class="mat-elevation-z8 enc-table">
+                        <table mat-table [dataSource]="dataSourceEncounter">
+                      
+                          <!-- Weight Column -->
+                          <ng-container matColumnDef="encReason">
+                            <th mat-header-cell *matHeaderCellDef> Encounter Reason </th>
+                            <td mat-cell *matCellDef="let element"> {{element.encReason}} </td>
+                          </ng-container>
+                      
+                          <!-- Symbol Column -->
+                          <ng-container matColumnDef="encDate">
+                            <th mat-header-cell *matHeaderCellDef> Encounter Date </th>
+                            <td mat-cell *matCellDef="let element"> {{element.encDate}} </td>
+                          </ng-container>
+    
+                           <!-- Position Column -->
+                           <ng-container matColumnDef="encDoctor">
+                            <th mat-header-cell *matHeaderCellDef> Doctor Name </th>
+                            <td mat-cell *matCellDef="let element"> {{element.encDoctor}} </td>
+                          </ng-container>
+                      
+                          <tr mat-header-row *matHeaderRowDef="displayedColumnsEnc"></tr>
+                          <tr mat-row *matRowDef="let row; columns: displayedColumnsEnc;"></tr>
+                        </table>
+                      
+                        <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+                    </div>
+                    <div class="button-type">
+                        <button type="submit" (click)="addPatientData()" mat-raised-button color="primary">Submit</button>
+                    </div>
+                </div>
+            </mat-tab>
+            <mat-tab label="Vitals">
+                <div class="example-container">
+                    <form [formGroup]="formVital">
+                        <mat-grid-list cols="12" rowHeight="65px">
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Execution Date</mat-label>
+                                    <input formControlName="viCreationDate" [(ngModel)]="viCreationDate" class="input-text" matInput [matDatepicker]="picker4">
+                                    <mat-datepicker-toggle matSuffix [for]="picker4">
+                                    </mat-datepicker-toggle>
+                                    <mat-datepicker #picker4></mat-datepicker>
+                                 </mat-form-field>
+                            </mat-grid-tile>
+                        </mat-grid-list>
+                        <mat-grid-list cols="12" rowHeight="65px">
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Temperature</mat-label>
+                                    <input type="text" [(ngModel)]="temperature" class="input-text" matInput formControlName="temperature" placeholder="(36-37) °C">
+                                  </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Height</mat-label>
+                                    <input type="text" [(ngModel)]="height" class="input-text" matInput formControlName="height" placeholder="(50-180) cm">
+                                  </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Respiration</mat-label>
+                                    <input type="text" [(ngModel)]="respiration" class="input-text" matInput formControlName="respiration" placeholder="(12-60) bpm">
+                                  </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Pulse Oximetry</mat-label>
+                                    <input type="text" [(ngModel)]="pulseOximetry" class="input-text" matInput formControlName="pulseOximetry" placeholder="(90-105) %">
+                                  </mat-form-field>
+                            </mat-grid-tile>
+                        </mat-grid-list>
+                        <mat-grid-list cols="12" rowHeight="65px">
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Weight</mat-label>
+                                    <input type="text" [(ngModel)]="weight" class="input-text" matInput formControlName="weight" placeholder="(1-150) kg">
+                                  </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Blood Pressure</mat-label>
+                                    <input type="text" [(ngModel)]="systolic" class="input-text" matInput formControlName="systolic" placeholder="(90-120) mmHg">
+                                  </mat-form-field>
+                            </mat-grid-tile>
+                            <!-- <mat-grid-tile [colspan]="3">
+                                <mat-form-field appearance="fill">
+                                    <mat-label>Diastolic</mat-label>
+                                    <input type="text" [(ngModel)]="diastolic" class="input-text" matInput formControlName="diastolic" placeholder="(60-120) mmHg">
+                                  </mat-form-field>
+                            </mat-grid-tile> -->
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Pain Score</mat-label>
+                                    <mat-select [(ngModel)]="painScore" formControlName="painScore">
+                                        <mat-option *ngFor="let pain of painScoreList" [value]="pain.value">
+                                            {{pain.view}}
+                                          </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </mat-grid-tile>   
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Fetal Heart Rate</mat-label>
+                                    <input type="text" [(ngModel)]="fetalHeartRate" class="input-text" matInput formControlName="fetalHeartRate" placeholder="(85-210) bpm">
+                                  </mat-form-field>
+                            </mat-grid-tile>                 
+                        </mat-grid-list>
+                        
+                        <div class="button-type">
+                            <button type="submit" (click)="addVitalData()" mat-raised-button color="primary">Submit</button>
+                        </div>
+                    </form>
+                    <div class="mat-elevation-z8">
+                        <table mat-table [dataSource]="dataSourceVital">
+
+                            <!-- Symbol Column -->
+                            <ng-container matColumnDef="vitalName">
+                                <th mat-header-cell *matHeaderCellDef> Vital Name </th>
+                                <td mat-cell *matCellDef="let element"> {{element.vitalName}} </td>
+                            </ng-container>
+                      
+                            <!-- Symbol Column -->
+                            <ng-container matColumnDef="vitalValue">
+                                <th mat-header-cell *matHeaderCellDef> Vital Value </th>
+                                <td mat-cell *matCellDef="let element"> {{element.vitalValue}} </td>
+                            </ng-container>
+        
+                            <!-- Position Column -->
+                            <ng-container matColumnDef="creationDate">
+                                <th mat-header-cell *matHeaderCellDef> Execution Date </th>
+                                <td mat-cell *matCellDef="let element"> {{element.creationDate}} </td>
+                            </ng-container>
+        
+                            <!-- Name Column -->
+                            <ng-container matColumnDef="vitalRemarks">
+                                <th mat-header-cell *matHeaderCellDef> Remarks </th>
+                                <td mat-cell *matCellDef="let element"> {{element.vitalRemarks}} </td>
+                            </ng-container>
+                      
+                            <tr mat-header-row *matHeaderRowDef="displayedColumns4"></tr>
+                            <tr mat-row *matRowDef="let row; columns: displayedColumns4;"></tr>
+                        </table>
+                        <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+                    </div>
+                </div>
+            </mat-tab>
+            <mat-tab label="Diagnosis">
+                <div class="example-container">
+                    <form [formGroup]="formDiag">
+                        <mat-grid-list cols="12" rowHeight="65px">
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-select [(ngModel)]="diagName" formControlName="diagName">
+                                        <mat-option *ngFor="let type of diagnosis" [value]="type.value">
+                                            {{type.view}}
+                                          </mat-option>
+                                    </mat-select>
+                                    <mat-label>Diagnosis Name</mat-label>
+                                </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Diagnosis Value</mat-label>
+                                    <div class="patient-display">
+                                        <input type="text" [(ngModel)]="diagValue" class="input-text" matInput formControlName="diagValue" placeholder="Enter value">
+                                    </div>
+                                  </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Execution Date</mat-label>
+                                    <input formControlName="dCreationDate" [(ngModel)]="dCreationDate" class="input-text" matInput [matDatepicker]="picker6">
+                                    <mat-datepicker-toggle matSuffix [for]="picker6"></mat-datepicker-toggle>
+                                    <mat-datepicker #picker6></mat-datepicker>
+                                 </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Remarks</mat-label>
+                                    <div class="patient-display">
+                                        <input type="text" [(ngModel)]="diagRemarks" class="input-text" matInput formControlName="diagRemarks" placeholder="remarks">
+                                    </div>
+                                </mat-form-field>
+                            </mat-grid-tile>
+                        </mat-grid-list>
+                        <div class="button-type">
+                            <button type="submit" (click)="addDiagData()" mat-raised-button color="primary">Submit</button>
+                        </div>
+                    </form>
+                    <div class="mat-elevation-z8">
+                        <table mat-table [dataSource]="dataSourceDiag">
+                      
+                          <!-- Weight Column -->
+                          <ng-container matColumnDef="diagName">
+                            <th mat-header-cell *matHeaderCellDef> Diagnosis Name </th>
+                            <td mat-cell *matCellDef="let element"> {{element.diagName}} </td>
+                          </ng-container>
+                      
+                          <!-- Symbol Column -->
+                          <ng-container matColumnDef="diagValue">
+                            <th mat-header-cell *matHeaderCellDef> Diagnosis Value </th>
+                            <td mat-cell *matCellDef="let element"> {{element.diagValue}} </td>
+                          </ng-container>
+    
+                           <!-- Position Column -->
+                           <ng-container matColumnDef="creationDate">
+                            <th mat-header-cell *matHeaderCellDef> Execution Date </th>
+                            <td mat-cell *matCellDef="let element"> {{element.creationDate}} </td>
+                          </ng-container>
+
+                           <!-- Name Column -->
+                           <ng-container matColumnDef="diagRemarks">
+                            <th mat-header-cell *matHeaderCellDef> Remarks </th>
+                            <td mat-cell *matCellDef="let element"> {{element.diagRemarks}} </td>
+                          </ng-container>
+                      
+                          <tr mat-header-row *matHeaderRowDef="displayedColumnsDiag"></tr>
+                          <tr mat-row *matRowDef="let row; columns: displayedColumnsDiag;"></tr>
+                        </table>
+                      
+                        <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+                    </div>
+                </div>
+            </mat-tab>
+            <mat-tab label="Lab">
+                <div class="example-container">
+                    <form [formGroup]="formLab">
+                        <mat-grid-list cols="12" rowHeight="65px">
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-select [(ngModel)]="labDiaType" formControlName="labDiaType">
+                                        <mat-option *ngFor="let type of labList" [value]="type.value">
+                                            {{type.view}}
+                                        </mat-option>
+                                    </mat-select>
+                                    <mat-label>Lab Name</mat-label>
+                                </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Lab Value</mat-label>
+                                    <div class="patient-display">
+                                        <input type="number" [(ngModel)]="labValue" class="input-text" matInput formControlName="labValue" placeholder="Enter value">
+                                        <span>%</span>
+                                    </div>
+                                  </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Execution Date</mat-label>
+                                    <input formControlName="lCreationDate" [(ngModel)]="lCreationDate" class="input-text" matInput [matDatepicker]="picker">
+                                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                                    <mat-datepicker #picker></mat-datepicker>
+                                 </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Remarks</mat-label>
+                                    <div class="patient-display">
+                                        <input type="text" [(ngModel)]="labRemarks" class="input-text" matInput formControlName="labRemarks" placeholder="remarks">
+                                    </div>
+                                </mat-form-field>
+                            </mat-grid-tile>
+                        </mat-grid-list>
+                        <div class="button-type">
+                            <button type="submit" (click)="addLabData()" mat-raised-button color="primary">Submit</button>
+                        </div>
+                    </form>
+                    <div class="mat-elevation-z8">
+                        <table mat-table [dataSource]="dataSourceLab">
+                      
+                          <!-- Weight Column -->
+                          <ng-container matColumnDef="labName">
+                            <th mat-header-cell *matHeaderCellDef> Lab Name </th>
+                            <td mat-cell *matCellDef="let element"> {{element.labName}} </td>
+                          </ng-container>
+                      
+                          <!-- Symbol Column -->
+                          <ng-container matColumnDef="labValue">
+                            <th mat-header-cell *matHeaderCellDef> Lab Value </th>
+                            <td mat-cell *matCellDef="let element"> {{element.labValue}} </td>
+                          </ng-container>
+    
+                           <!-- Position Column -->
+                           <ng-container matColumnDef="creationDate">
+                            <th mat-header-cell *matHeaderCellDef> Execution Date </th>
+                            <td mat-cell *matCellDef="let element"> {{element.creationDate}} </td>
+                          </ng-container>
+
+                           <!-- Name Column -->
+                           <ng-container matColumnDef="labRemarks">
+                            <th mat-header-cell *matHeaderCellDef> Remarks </th>
+                            <td mat-cell *matCellDef="let element"> {{element.labRemarks}} </td>
+                          </ng-container>
+                      
+                          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                        </table>
+                      
+                        <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+                    </div>
+                </div>
+            </mat-tab>
+            <mat-tab label="Vaccination">
+                <div class="example-container">
+                    <form [formGroup]="formVaccine">
+                        <mat-grid-list cols="12" rowHeight="65px">
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Vaccine Name</mat-label>
+                                    <mat-select [(ngModel)]="vaccineName" formControlName="vaccineName">
+                                        <mat-option *ngFor="let vaccine of vaccineList" [value]="vaccine.value">
+                                            {{vaccine.view}}
+                                          </mat-option>
+                                    </mat-select>
+                                  </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Vaccinated?</mat-label>
+                                    <mat-select [(ngModel)]="pVaccine" formControlName="pVaccine">
+                                        <mat-option *ngFor="let cond of conditionInput" [value]="cond.value">
+                                            {{cond.view}}
+                                          </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Execution Date</mat-label>
+                                    <input formControlName="vCreationDate" [(ngModel)]="vCreationDate"  class="input-text" matInput [matDatepicker]="picker2">
+                                    <mat-datepicker-toggle matSuffix [for]="picker2">
+                                        <mat-icon style="font-size: 30px;" matDatepickerToggleIcon>keyboard_arrow_down</mat-icon>
+                                    </mat-datepicker-toggle>
+                                    <mat-datepicker #picker2></mat-datepicker>
+                                 </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Remarks</mat-label>
+                                    <div class="patient-display">
+                                        <input type="text" [(ngModel)]="vaccineRemarks" class="input-text" matInput formControlName="vaccineRemarks" placeholder="remarks">
+                                    </div>
+                                </mat-form-field>
+                            </mat-grid-tile>
+                        </mat-grid-list>
+                        <div class="button-type">
+                            <button type="submit" (click)="addVaccineData()" mat-raised-button color="primary">Submit</button>
+                        </div>
+                    </form>
+                    <div class="mat-elevation-z8">
+                        <table mat-table [dataSource]="dataSourceVaccine">
+                      
+                          <!-- Weight Column -->
+                          <ng-container matColumnDef="vaccineName">
+                            <th mat-header-cell *matHeaderCellDef> Vaccine Name </th>
+                            <td mat-cell *matCellDef="let element"> {{element.vaccineName}} </td>
+                          </ng-container>
+                      
+                          <!-- Symbol Column -->
+                          <ng-container matColumnDef="pVaccine">
+                            <th mat-header-cell *matHeaderCellDef> Vaccinated </th>
+                            <td mat-cell *matCellDef="let element"> {{element.pVaccine}} </td>
+                          </ng-container>
+    
+                           <!-- Position Column -->
+                           <ng-container matColumnDef="creationDate">
+                            <th mat-header-cell *matHeaderCellDef> Execution Date </th>
+                            <td mat-cell *matCellDef="let element"> {{element.creationDate}} </td>
+                          </ng-container>
+
+                            <!-- Name Column -->
+                            <ng-container matColumnDef="remarks">
+                                <th mat-header-cell *matHeaderCellDef> Remarks </th>
+                                <td mat-cell *matCellDef="let element"> {{element.remarks}} </td>
+                            </ng-container>
+                      
+                          <tr mat-header-row *matHeaderRowDef="displayedColumns2"></tr>
+                          <tr mat-row *matRowDef="let row; columns: displayedColumns2;"></tr>
+                        </table>
+                      
+                        <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+                    </div>
+                </div>
+            </mat-tab>
+            <mat-tab label="Screening">
+                <div class="example-container">
+                    <form [formGroup]="formScreening">
+                        <mat-grid-list cols="12" rowHeight="65px">
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Screening & Documentation</mat-label>
+                                    <mat-select [(ngModel)]="screenName" formControlName="screenName">
+                                        <mat-option *ngFor="let screen of screenList" [value]="screen.value">
+                                            {{screen.view}}
+                                          </mat-option>
+                                    </mat-select>
+                                  </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Screening & Documentation done?</mat-label>
+                                    <mat-select [(ngModel)]="screenValue" formControlName="screenValue">
+                                        <mat-option *ngFor="let cond of conditionInput" [value]="cond.value">
+                                            {{cond.view}}
+                                          </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Execution Date</mat-label>
+                                    <input formControlName="sCreationDate" [(ngModel)]="sCreationDate" class="input-text" matInput [matDatepicker]="picker3">
+                                    <mat-datepicker-toggle matSuffix [for]="picker3">
+                                        <mat-icon style="font-size: 30px;" matDatepickerToggleIcon>keyboard_arrow_down</mat-icon>
+                                    </mat-datepicker-toggle>
+                                    <mat-datepicker #picker3></mat-datepicker>
+                                 </mat-form-field>
+                            </mat-grid-tile>                        
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Remarks</mat-label>
+                                    <div class="patient-display">
+                                        <input type="text" [(ngModel)]="screenRemarks" class="input-text" matInput formControlName="screenRemarks" placeholder="remarks">
+                                    </div>
+                                </mat-form-field>
+                            </mat-grid-tile>
+                        </mat-grid-list>
+                        <div class="button-type">
+                            <button type="submit" (click)="addScreenData()" mat-raised-button color="primary">Submit</button>
+                        </div>
+                    </form>
+                    <div class="mat-elevation-z8">
+                        <table mat-table [dataSource]="dataSourceScreen">
+                      
+                          <!-- Name Column -->
+                          <ng-container matColumnDef="screenName">
+                            <th mat-header-cell *matHeaderCellDef> Screening & Documentation </th>
+                            <td mat-cell *matCellDef="let element"> {{element.screenName}} </td>
+                          </ng-container>
+                      
+                          <!-- Weight Column -->
+                          <ng-container matColumnDef="screenValue">
+                            <th mat-header-cell *matHeaderCellDef> Screening Status </th>
+                            <td mat-cell *matCellDef="let element"> {{element.screenValue}} </td>
+                          </ng-container>
+    
+                           <!-- Position Column -->
+                           <ng-container matColumnDef="creationDate">
+                            <th mat-header-cell *matHeaderCellDef> Execution Date </th>
+                            <td mat-cell *matCellDef="let element"> {{element.creationDate}} </td>
+                          </ng-container>
+
+                            <!-- Symbol Column -->
+                            <ng-container matColumnDef="screenRemarks">
+                                <th mat-header-cell *matHeaderCellDef> Remarks </th>
+                                <td mat-cell *matCellDef="let element"> {{element.screenRemarks}} </td>
+                            </ng-container>
+                      
+                          <tr mat-header-row *matHeaderRowDef="displayedColumns3"></tr>
+                          <tr mat-row *matRowDef="let row; columns: displayedColumns3;"></tr>
+                        </table>
+                      
+                        <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+                    </div>
+                </div>
+            </mat-tab>
+        </mat-tab-group>
+    </div>
+</section>

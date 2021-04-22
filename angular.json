@@ -27,13 +27,32 @@
             "tsConfig": "tsconfig.app.json",
             "aot": true,
             "assets": [
+              "src/assets",
               "src/favicon.ico",
-              "src/assets"
+              "src/env.js",
+              "src/template.js",
+              {
+                "glob": "**/*",
+                "input": "node_modules/ngx-extended-pdf-viewer/assets/locale",
+                "output": "/assets/locale/"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/ngx-extended-pdf-viewer/assets/images",
+                "output": "/assets/images/"
+              }
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "src/assets/styles/app.scss",
+              "src/assets/fonts/linea/styles.css",
+              "src/assets/fonts/header/_flaticon.scss",
+              "src/assets/fonts/data-table/icons.css",
+              "src/assets/styles/custom/mat-table.scss"
             ],
-            "scripts": []
+            "scripts": [
+              "node_modules/hammerjs/hammer.min.js"
+            ]
           },
           "configurations": {
             "production": {
@@ -94,7 +113,10 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.scss"
+              "src/assets/fonts/linea/styles.css",
+              "src/assets/fonts/header/_flaticon.scss",
+              "src/assets/fonts/data-table/icons.css",
+              "src/assets/styles/app.scss"
             ],
             "scripts": []
           }

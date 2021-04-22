@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 22.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 32 32" style="enable-background:new 0 0 32 32;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#3BA8DF;}
+	.st1{fill:#FFFFFF;}
+	.st2{fill:none;stroke:#FFFFFF;stroke-width:0.2;}
+	.st3{font-family:'Arial-BoldMT';}
+	.st4{font-size:13px;}
+	.st5{font-family:'Raleway-Medium';}
+	.st6{font-size:20px;}
+</style>
+<title>Group</title>
+<desc>Created with Sketch.</desc>
+<g id="Page-1">
+	<g id="_x31__x29_-Bulk-Appointment" transform="translate(-1371.000000, -87.000000)">
+		<g id="Group" transform="translate(1371.000000, 87.000000)">
+			<g id="blood">
+				<circle id="Oval" class="st0" cx="16" cy="16" r="16"/>
+				<g id="Group-3" transform="translate(8.000000, 7.000000)">
+					<g id="Fill-1">
+						<g>
+							<path id="path-1" class="st1" d="M15,1V0h-1v1h-1V0h-1v1h-1V0h-1v1H9V0H8v1H7V0H6v1H5V0H4v1H3V0H2v1H0v16h17V1H15z M1,2h1v1
+								h1V2h1v1h1V2h1v1h1V2h1v1h1V2h1v1h1V2h1v1h1V2h1v1h1V2h1v2H1V2z M1,16h15V5H1V16z"/>
+						</g>
+						<path class="st2" d="M15.1,0.9H17L17.1,1v16L17,17.1H0L-0.1,17V1L0,0.9h1.9V0L2-0.1h1L3.1,0v0.9h0.8V0L4-0.1h1L5.1,0v0.9h0.8
+							V0L6-0.1h1L7.1,0v0.9h0.8V0L8-0.1h1L9.1,0v0.9h0.8V0L10-0.1h1L11.1,0v0.9h0.8V0L12-0.1h1L13.1,0v0.9h0.8V0L14-0.1h1L15.1,0
+							V0.9z M1.1,2.1v1.8h14.8V2.1h-0.8V3L15,3.1h-1L13.9,3V2.1h-0.8V3L13,3.1h-1L11.9,3V2.1h-0.8V3L11,3.1h-1L9.9,3V2.1H9.1V3
+							L9,3.1H8L7.9,3V2.1H7.1V3L7,3.1H6L5.9,3V2.1H5.1V3L5,3.1H4L3.9,3V2.1H3.1V3L3,3.1H2L1.9,3V2.1H1.1z M1.1,15.9h14.8V5.1H1.1
+							V15.9z"/>
+					</g>
+				</g>
+				<text transform="matrix(1 0 0 1 12.209 22)" class="st1 st3 st4">+</text>
+			</g>
+		</g>
+	</g>
+</g>
+<text transform="matrix(1 0 0 1 12.209 24)" class="st0 st5 st6">+</text>
+</svg>
