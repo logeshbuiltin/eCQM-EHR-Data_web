@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  apiHomeUrl: "https://patient-data-portal.herokuapp.com/",
+  apiHomeUrl: "https://patient-data-portal.herokuapp.com",
   apiLocalUrl: "http://localhost:4200"
 };
 

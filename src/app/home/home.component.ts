@@ -20,6 +20,8 @@ export class HomeComponent implements OnInit, AfterViewInit {
   @ViewChild('picker3') picker3: any;
   @ViewChild('picker4') picker4: any;
   @ViewChild('picker5') picker5: any;
+  @ViewChild('picker6') picker6: any;
+  @ViewChild('picker7') picker7: any;
 
   @ViewChild(MatPaginator)
   paginator!: MatPaginator;
@@ -59,7 +61,8 @@ export class HomeComponent implements OnInit, AfterViewInit {
 
   //vitals
   temperature: any = "";
-  height: any = "";
+  heightFeet: any = "";
+  heightInch: any = ""
   respiration: any = "";
   pulseOximetry: any = "";
   weight: any = "";
@@ -78,6 +81,12 @@ export class HomeComponent implements OnInit, AfterViewInit {
   diagName: any = "";
   diagValue: any = "";
   diagRemarks: any = "";
+  dEntryDate: Date = new Date();
+
+  //spinner
+  resourcesLoaded: boolean = false;
+
+  valueType: any = "";
 
   encDataList: any[] = [];
 
@@ -92,7 +101,7 @@ export class HomeComponent implements OnInit, AfterViewInit {
 
   displayedColumnsEnc: string[] = ["encReason", "encDate", "encDoctor"];
 
-  displayedColumnsDiag: string[] = ["diagName", "diagValue", "creationDate","diagRemarks"];
+  displayedColumnsDiag: string[] = ["diagName", "diagDate", "creationDate","diagRemarks"];
 
   genderList: any[] = [
     {value: "male", view: "Male"},
@@ -114,12 +123,12 @@ export class HomeComponent implements OnInit, AfterViewInit {
   ];
 
   labList: any[] = [
-    {value: "HbA1c", view: "HbA1c"},
-    {value: "RBS", view: "RBS"},
-    {value: "PPBS", view: "PPBS"},
-    {value: "FBS", view: "FBS"},
-    {value: "Fecal occult blood test (FOBT)", view: "Fecal occult blood test (FOBT)"},
-    {value: "FIT-DNA", view: "FIT-DNA"}
+    {value: "HbA1c", view: "HbA1c", type: "%"},
+    {value: "RBS", view: "RBS", type: "mmol/L"},
+    {value: "PPBS", view: "PPBS", type: "mmol/L"},
+    {value: "FBS", view: "FBS", type: "mmol/L"},
+    {value: "Fecal occult blood test (FOBT)", view: "Fecal occult blood test (FOBT)", type: ""},
+    {value: "FIT-DNA", view: "FIT-DNA", type: ""}
   ];
 
   vaccineList: any[] = [
@@ -150,11 +159,14 @@ export class HomeComponent implements OnInit, AfterViewInit {
   ];
 
   doctorList: any[] = [
-    {value: "doc1", view: "Doctor 1"},
-    {value: "doc2", view: "Doctor 2"},
-    {value: "doc3", view: "Doctor 3"},
-    {value: "doc4", view: "Doctor 4"},
-    {value: "doc5", view: "Doctor 5"},
+    {value: "doc1", view: "Dr. Suzanne Holroyd"},
+    {value: "doc2", view: "Dr. Stacey E. Mills"},
+    {value: "doc3", view: "Dr. Paula M. Fracasso"},
+    {value: "doc4", view: "Dr. Bruce Bateman"},
+    {value: "doc5", view: "Dr. Stacey E. Mills"},
+    {value: "doc6", view: "Dr. David R. Jones"},
+    {value: "doc7", view: "Dr. George A. Beller"},
+    {value: "doc7", view: "Dr. Mark D. Okusa"},
   ];
 
   patientName: string = "";
@@ -198,9 +210,10 @@ export class HomeComponent implements OnInit, AfterViewInit {
 
   formDiag = this.formBuilder.group({
     diagName: new FormControl({  }),
-    diagValue: new FormControl({  }),
+    //diagValue: new FormControl({  }),
     diagRemarks: new FormControl({  }),
     dCreationDate: new FormControl({  }),
+    dEntryDate: new FormControl({  }),
   });
 
   formScreening = this.formBuilder.group({
@@ -212,7 +225,8 @@ export class HomeComponent implements OnInit, AfterViewInit {
 
   formVital = this.formBuilder.group({
     temperature: new FormControl({  }),
-    height: new FormControl({  }),
+    heightFeet: new FormControl({  }),
+    heightInch: new FormControl({  }),
     respiration: new FormControl({  }),
     pulseOximetry: new FormControl({  }),
     weight: new FormControl({  }),
@@ -228,7 +242,8 @@ export class HomeComponent implements OnInit, AfterViewInit {
     public formBuilder: FormBuilder,
     public httpService: HttpCustomService,
     public snackBar: MatSnackBar,
-    private searchService: patientService
+    private searchService: patientService,
+    //private spinnerService: Ng4LoadingSpinnerService
   ) { }
 
   ngAfterViewInit(): void {
@@ -244,34 +259,30 @@ export class HomeComponent implements OnInit, AfterViewInit {
     if(tabEvent.index == 0) {
 
     } else if (tabEvent.index == 1) {
+      this.dataSourceVital.data = [];
       this.getVitalList();
     } else if (tabEvent.index == 2) {
+      this.dataSourceDiag.data = [];
       this.getDiagList();
     } else if (tabEvent.index == 3) {
+      this.dataSourceLab.data = [];
       this.getLabList();
     } else if (tabEvent.index == 4) {
+      this.dataSourceVaccine.data = [];
       this.getVaccineList();
     } else if (tabEvent.index == 5) {
+      this.dataSourceVital.data = [];
       this.getVitalList();
     }
   }
 
   getVitalList() {
-    let vitalList: any[] = [];
     if(this.patientId == "") {
       this.snackBar.open("Warning", "Select patient to view complete list.", {duration: 2000});
     } else {
       this.httpService.get(this.apiEndPoint+"/api/getallVitalsById/"+this.patientId).subscribe((res: any) =>{
         if(res.length > 0) {
-          res.forEach((element: any) => {
-            let screenData = {
-              creationDate: new Date(element.createdDate),
-              vitalName: element.pMrno,
-              bpMeasure: element.bpMeasure,
-            };
-            vitalList.push(screenData);
-          });
-          this.dataSourceVital = new MatTableDataSource<any>(vitalList);
+          this.updateVitalTable(res);
         } else {
           this.snackBar.open("Warning", "No list found for the patient.", {duration: 3000});
         }
@@ -281,25 +292,27 @@ export class HomeComponent implements OnInit, AfterViewInit {
     }
   }
 
+  updateVitalTable(res: any) {
+    let vitalList: any[] = this.dataSourceVital.data;
+    res.forEach((element: any) => {
+    let screenData = {
+      creationDate: new Date(element.createdDate),
+      vitalName: element.vitalName,
+      vitalValue: element.bpMeasure?  element.bpMeasure: element. vitalValue,
+      vitalRemarks: element.remarks
+    };
+    vitalList.push(screenData);
+  });
+  this.dataSourceVital = new MatTableDataSource<any>(vitalList);
+  }
+
   getScreeningList() {
-    let screenList: any[] = [];
     if(this.patientId == "") {
       this.snackBar.open("Warning", "Select patient to view complete list.", {duration: 2000});
     } else {
       this.httpService.get(this.apiEndPoint+"/api/getallScreenById/"+this.patientId).subscribe((res: any) =>{
         if(res.length > 0) {
-          res.forEach((element: any) => {
-            let screenData = {
-              creationDate: new Date(element.createdDate),
-              patientMrn: element.pMrno,
-              screenName: element.screenName,
-              riskAssess: element.riskAssess,
-              Mammogram: element.mammogram,
-              fCPDocu: element.fullCarePlanDocu
-            };
-            screenList.push(screenData);
-          });
-          this.dataSourceScreen = new MatTableDataSource<any>(screenList);
+          this.updateScreenTable(res);
         } else {
           this.snackBar.open("Warning", "No list found for the patient.", {duration: 3000});
         }
@@ -309,24 +322,29 @@ export class HomeComponent implements OnInit, AfterViewInit {
     }
   }
 
+  updateScreenTable(res: any) {
+    let screenList: any[] = this.dataSourceScreen.data;
+    res.forEach((element: any) => {
+    let screenData = {
+      creationDate: new Date(element.creationDate)? new Date(element.creationDate): new Date(element.createdDate),
+      patientMrn: element.pMrno,
+      screenName: element.screenName,
+      riskAssess: element.riskAssess,
+      Mammogram: element.mammogram,
+      fCPDocu: element.fullCarePlanDocu
+    };
+    screenList.push(screenData);
+  });
+  this.dataSourceScreen = new MatTableDataSource<any>(screenList);
+  }
+
   getVaccineList() {
-    let vaccineList: any[] = [];
     if(this.patientId == "") {
       this.snackBar.open("Warning", "Select patient to view complete list.", {duration: 2000});
     } else {
       this.httpService.get(this.apiEndPoint+"/api/getallVaccineById/"+this.patientId).subscribe((res: any) =>{
         if(res.length > 0) {
-          res.forEach((element: any) => {
-            let VaccineData = {
-              creationDate: new Date(element.createdDate),
-              patientMrn: element.pMrno,
-              vaccineName: element.vaccineName,
-              pVaccine: element.vaccineValue,
-              remarks: element.remarks
-            };
-            vaccineList.push(VaccineData);
-          });
-          this.dataSourceVaccine = new MatTableDataSource<any>(vaccineList);
+          this.updateVaccineTable(res);
         } else {
           this.snackBar.open("Warning", "No list found for the patient.", {duration: 3000});
         }
@@ -336,24 +354,28 @@ export class HomeComponent implements OnInit, AfterViewInit {
     }
   }
 
+  updateVaccineTable(res: any) {
+    let vaccineList: any[] = this.dataSourceVaccine.data;
+    res.forEach((element: any) => {
+    let VaccineData = {
+      creationDate: new Date(element.creationDate)? new Date(element.creationDate): new Date(element.createdDate),
+      patientMrn: element.pMrno,
+      vaccineName: element.vaccineName,
+      pVaccine: element.vaccineValue,
+      remarks: element.remarks
+    };
+    vaccineList.push(VaccineData);
+  });
+  this.dataSourceVaccine = new MatTableDataSource<any>(vaccineList);
+  }
+
   getLabList() {
-    let labList: any[] = [];
     if(this.patientId == "") {
       this.snackBar.open("Warning", "Select patient to view complete list.", {duration: 2000});
     } else {
       this.httpService.get(this.apiEndPoint+"/api/getallByType/"+this.patientId+"/"+"Lab").subscribe((res: any) =>{
         if(res.length > 0) {
-          res.forEach((element: any) => {
-            let labData = {
-              creationDate: new Date(element.createdDate),
-              patientMrn: element.pMrno,
-              labValue: element.diagValue + '%',
-              labName: element.diagName,
-              labRemarks: element.remarks
-            };
-            labList.push(labData);
-          });
-          this.dataSourceLab = new MatTableDataSource<any>(labList);
+          this.updateLabTable(res);
         } else {
           this.snackBar.open("Warning", "No list found for the patient.", {duration: 3000});
         }
@@ -363,24 +385,28 @@ export class HomeComponent implements OnInit, AfterViewInit {
     }
   }
 
+  updateLabTable(res: any) {
+    let labList: any[] = this.dataSourceLab.data;
+    res.forEach((element: any) => {
+      let labData = {
+        creationDate: new Date(element.createdDate),
+        patientMrn: element.pMrno,
+        labValue: element.dEntryDate? element.dEntryDate: element.diagValue,
+        labName: element.diagName,
+        labRemarks: element.remarks
+      };
+      labList.push(labData);
+    });
+    this.dataSourceLab = new MatTableDataSource<any>(labList);
+  }
+
   getDiagList() {
-    let diagList: any[] = [];
     if(this.patientId == "") {
       this.snackBar.open("Warning", "Select patient to view complete list.", {duration: 2000});
     } else {
       this.httpService.get(this.apiEndPoint+"/api/getallByType/"+this.patientId+"/"+"Diag").subscribe((res: any) =>{
         if(res.length > 0) {
-          res.forEach((element: any) => {
-            let diagData = {
-              creationDate: new Date(element.createdDate),
-              patientMrn: element.pMrno,
-              diagName: element.diagName,
-              diagValue: element.diagValue,
-              diagRemarks: element.remarks
-            };
-            diagList.push(diagData);
-          });
-          this.dataSourceDiag = new MatTableDataSource<any>(diagList);
+          this.updateDiagTable(res);
         } else {
           this.snackBar.open("Warning", "No list found for the patient.", {duration: 3000});
         }
@@ -388,6 +414,21 @@ export class HomeComponent implements OnInit, AfterViewInit {
         this.snackBar.open("Error", "Something went wrong.", {duration: 3000});
       });
     }
+  }
+
+  updateDiagTable(res: any) {
+    let diagList: any[] = this.dataSourceDiag.data;
+    res.forEach((element: any) => {
+      let diagData = {
+        creationDate: new Date(element.createdDate),
+        patientMrn: element.pMrno,
+        diagName: element.diagName,
+        diagDate: new Date(element.diagValue),
+        diagRemarks: element.remarks
+      };
+      diagList.push(diagData);
+    });
+    this.dataSourceDiag = new MatTableDataSource<any>(diagList);
   }
 
   clearPatientData() {
@@ -419,6 +460,21 @@ export class HomeComponent implements OnInit, AfterViewInit {
     }
   }
 
+  selectLabType(event: any) {
+    let selectedLab = this.labList.find(p => p.value == event.value);
+    if(selectedLab) {
+      this.valueType = selectedLab.type;
+    }
+  }
+
+  calculateBMI() {
+    if((this.heightFeet || this.heightInch) && this.weight) {
+      let convertedHeight = (this.heightFeet*12)+this.heightInch;
+      let bmi=(((this.weight/2.2046)/Math.pow(convertedHeight,2))*703),globalBMI=bmi;
+      this.fetalHeartRate = bmi.toFixed(2);
+    }
+  }
+
   addEncounterDetails() {
     let payload = {
       encReason: this.encReason,
@@ -442,7 +498,12 @@ export class HomeComponent implements OnInit, AfterViewInit {
         "createdDate": epochToday,
         "pStatus": "active"
       };
+      this.resourcesLoaded = true;
+      //this.spinnerService.show();
+      //setTimeout(()=>this.spinnerService.hide(),5000)
       this.httpService.post(this.apiEndPoint+"/api/addPatient", payload).subscribe((res: any) =>{
+        this.resourcesLoaded = false;
+        //this.spinnerService.hide();
         if(res.patientId) {
           this.snackBar.open("Success", "Patient has been added to DataBase.", {duration: 3000});
           this.patientId = res.patientId;
@@ -453,6 +514,7 @@ export class HomeComponent implements OnInit, AfterViewInit {
           this.snackBar.open("Error", "Can not add patient to DataBase.", {duration: 3000});
         }
       }, error =>{
+        //this.spinnerService.hide();
         this.snackBar.open("Error", "Can not add patient to DataBase.", {duration: 3000});
       });
     }
@@ -469,10 +531,12 @@ export class HomeComponent implements OnInit, AfterViewInit {
         const epochToday = (new Date(this.lCreationDate)).getTime();
         let payload = this.getDiagPayload(epochToday, this.labValue, this.labDiaType, this.labRemarks, "Lab");
         payloadList.push(payload);
+        this.updateLabTable(payloadList);
         this.httpService.post(this.apiEndPoint+"/api/addLab/"+this.patientId, payloadList).subscribe((res: any) =>{
           if(res.status == true) {
             this.snackBar.open("Success", "Data has been added successfully.", {duration: 3000});
-            this.getLabList();
+            //this.updateLabTable(payloadList);
+            //this.getLabList();
           } else {
             this.snackBar.open("Error", "Can not add patient to DataBase.", {duration: 3000});
           }
@@ -492,12 +556,13 @@ export class HomeComponent implements OnInit, AfterViewInit {
       } else {
         let payloadList: any[] = [];
         const epochToday = (new Date(this.lCreationDate)).getTime();
-        let payload = this.getDiagPayload(epochToday, this.diagValue, this.diagName, this.diagRemarks, "Diag");
+        let payload = this.getDiagPayload(epochToday, new Date(this.dEntryDate), this.diagName, this.diagRemarks, "Diag");
         payloadList.push(payload);
+        this.updateDiagTable(payloadList);
         this.httpService.post(this.apiEndPoint+"/api/addLab/"+this.patientId, payloadList).subscribe((res: any) =>{
           if(res.status == true) {
             this.snackBar.open("Success", "Data has been added successfully.", {duration: 3000});
-            this.getDiagList();
+            //this.getDiagList();
           } else {
             this.snackBar.open("Error", "Can not add patient to DataBase.", {duration: 3000});
           }
@@ -508,10 +573,10 @@ export class HomeComponent implements OnInit, AfterViewInit {
     }
   }
 
-  getDiagPayload(epochToday: number, diagValue: any, diagDiaType: any, diagRemarks: any, diagType: any) {
+  getDiagPayload(epochToday: any, diagValue: any, diagDiaType: any, diagRemarks: any, diagType: any) {
     return {
       "pMrno": this.patientMrn,
-      "creationDate": epochToday,
+      "createdDate": epochToday,
       "diagValue": diagValue,
       "diagName": diagDiaType,
       "remarks": diagRemarks,
@@ -530,16 +595,17 @@ export class HomeComponent implements OnInit, AfterViewInit {
         const epochToday = (new Date(this.vCreationDate)).getTime();
         let payload = {
           "pMrno": this.patientMrn,
-          "creationDate": epochToday,
+          "createdDate": epochToday,
           "vaccineValue": this.pVaccine,
           "vaccineName": this.vaccineName,
           "remarks": this.vaccineRemarks
         };
         payloadList.push(payload);
+        this.updateVaccineTable(payloadList);
         this.httpService.post(this.apiEndPoint+"/api/addVaccine/"+this.patientId, payloadList).subscribe((res: any) =>{
           if(res.status == true) {
             this.snackBar.open("Success", "Data has been added successfully.", {duration: 3000});
-            this.getVaccineList();
+            //this.getVaccineList();
           } else {
             this.snackBar.open("Error", "Can not add patient to DataBase.", {duration: 3000});
           }
@@ -561,16 +627,17 @@ export class HomeComponent implements OnInit, AfterViewInit {
         const epochToday = (new Date(this.sCreationDate)).getTime();
         let payload = {
           "pMrno": this.patientMrn,
-          "creationDate": epochToday,
+          "createdDate": epochToday,
           "screenValue": this.screenValue,
           "screenName": this.screenName,
           "remarks": this.screenRemarks
         };
         payloadList.push(payload);
+        this.updateScreenTable(payloadList);
         this.httpService.post(this.apiEndPoint+"/api/addScreening/"+this.patientId, payloadList).subscribe((res: any) =>{
           if(res.status == true) {
             this.snackBar.open("Success", "Data has been added successfully.", {duration: 3000});
-            this.getScreeningList();
+            //this.getScreeningList();
           }
         }, error =>{
           this.snackBar.open("Error", "Can not add patient to DataBase.", {duration: 3000});
@@ -591,8 +658,8 @@ export class HomeComponent implements OnInit, AfterViewInit {
         if(this.temperature) {
           this.vitalPayload("Temperature", this.temperature, epochToday, payloadList);
         } 
-        if(this.height) {
-          this.vitalPayload("Height", this.height, epochToday, payloadList);
+        if(this.heightInch || this.heightFeet) {
+          this.vitalPayload("Height", (this.heightFeet+"."+this.heightInch), epochToday, payloadList);
         }
         if(this.respiration) {
           this.vitalPayload("Respiration", this.respiration, epochToday, payloadList);
@@ -612,10 +679,11 @@ export class HomeComponent implements OnInit, AfterViewInit {
         if(this.painScore) {
           this.vitalPayload("Pain Score", this.painScore, epochToday, payloadList);
         }
+        this.updateVitalTable(payloadList);
         this.httpService.post(this.apiEndPoint+"/api/addVital/"+this.patientId, payloadList).subscribe((res: any) =>{
           if(res.status == true) {
             this.snackBar.open("Success", "Data has been added successfully.", {duration: 3000});
-            this.getVitalList();
+            //this.getVitalList();
           }
         }, error =>{
           this.snackBar.open("Error", "Can not add patient to DataBase.", {duration: 3000});
@@ -627,7 +695,7 @@ export class HomeComponent implements OnInit, AfterViewInit {
   vitalPayload(dataType: string, dataValue: any, epochToday: any, payloadList: any[]) {
     let payload = {
       "pMrno": this.patientMrn,
-      "creationDate": epochToday,
+      "createdDate": epochToday,
       "vitalValue": dataValue,
       "vitalName": dataType,
       "remarks": this.vitalRemarks

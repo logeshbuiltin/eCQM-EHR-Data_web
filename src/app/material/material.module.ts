@@ -14,6 +14,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { NgxMatDatetimePickerModule } from '@angular-material-components/datetime-picker';
 import { MatNativeDateModule } from '@angular/material/core';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 
 
 @NgModule({
@@ -33,7 +34,8 @@ import { MatNativeDateModule } from '@angular/material/core';
     MatAutocompleteModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    NgxMatDatetimePickerModule
+    NgxMatDatetimePickerModule,
+    MatProgressSpinnerModule
   ],
   exports: [
     MatTabsModule,
@@ -49,7 +51,8 @@ import { MatNativeDateModule } from '@angular/material/core';
     MatAutocompleteModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    NgxMatDatetimePickerModule
+    NgxMatDatetimePickerModule,
+    MatProgressSpinnerModule
   ],
 })
 export class MaterialModule { }

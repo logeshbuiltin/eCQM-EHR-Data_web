@@ -1,7 +1,7 @@
 <section fxLayout="column" fxFlexAlign="stretch">
     <nav class="navbar custom-navbar bg-faded main-header">
         <div class="text-margin">
-            <p>eCQM EHR Data Review</p>
+            <p>eCQM EHR Data</p>
         </div>
     </nav>
     <div class="patient-detail">
@@ -94,7 +94,7 @@
                                         {{doc.view}}
                                       </mat-option>
                                 </mat-select>
-                                <mat-label>Doctor Name</mat-label>
+                                <mat-label>Provider</mat-label>
                                 </mat-form-field>
                             </mat-grid-tile>
                             <mat-grid-tile [colspan]="1">
@@ -147,7 +147,7 @@
                         <mat-grid-list cols="12" rowHeight="65px">
                             <mat-grid-tile [colspan]="3">
                                 <mat-form-field class="full-width" appearance="outline">
-                                    <mat-label>Execution Date</mat-label>
+                                    <mat-label>Date</mat-label>
                                     <input formControlName="viCreationDate" [(ngModel)]="viCreationDate" class="input-text" matInput [matDatepicker]="picker4">
                                     <mat-datepicker-toggle matSuffix [for]="picker4">
                                     </mat-datepicker-toggle>
@@ -159,19 +159,25 @@
                             <mat-grid-tile [colspan]="3">
                                 <mat-form-field class="full-width" appearance="outline">
                                     <mat-label>Temperature</mat-label>
-                                    <input type="text" [(ngModel)]="temperature" class="input-text" matInput formControlName="temperature" placeholder="(36-37) °C">
+                                    <input type="text" [(ngModel)]="temperature" class="input-text" matInput formControlName="temperature" placeholder="(97-99)°F">
+                                  </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="2">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Height(Feet)</mat-label>
+                                    <input type="number" (focusout)="calculateBMI()" [(ngModel)]="heightFeet" class="input-text" matInput formControlName="heightFeet" placeholder="Height">
+                                  </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="1">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Height(Inch)</mat-label>
+                                    <input type="number" (focusout)="calculateBMI()" [(ngModel)]="heightInch" class="input-text" matInput formControlName="heightInch" placeholder="Height">
                                   </mat-form-field>
                             </mat-grid-tile>
                             <mat-grid-tile [colspan]="3">
                                 <mat-form-field class="full-width" appearance="outline">
-                                    <mat-label>Height</mat-label>
-                                    <input type="text" [(ngModel)]="height" class="input-text" matInput formControlName="height" placeholder="(50-180) cm">
-                                  </mat-form-field>
-                            </mat-grid-tile>
-                            <mat-grid-tile [colspan]="3">
-                                <mat-form-field class="full-width" appearance="outline">
-                                    <mat-label>Respiration</mat-label>
-                                    <input type="text" [(ngModel)]="respiration" class="input-text" matInput formControlName="respiration" placeholder="(12-60) bpm">
+                                    <mat-label>Weight</mat-label>
+                                    <input type="text" (focusout)="calculateBMI()" [(ngModel)]="weight" class="input-text" matInput formControlName="weight" placeholder="(1-300) lbs">
                                   </mat-form-field>
                             </mat-grid-tile>
                             <mat-grid-tile [colspan]="3">
@@ -184,8 +190,8 @@
                         <mat-grid-list cols="12" rowHeight="65px">
                             <mat-grid-tile [colspan]="3">
                                 <mat-form-field class="full-width" appearance="outline">
-                                    <mat-label>Weight</mat-label>
-                                    <input type="text" [(ngModel)]="weight" class="input-text" matInput formControlName="weight" placeholder="(1-150) kg">
+                                    <mat-label>Respiration</mat-label>
+                                    <input type="text" [(ngModel)]="respiration" class="input-text" matInput formControlName="respiration" placeholder="(12-60) bpm">
                                   </mat-form-field>
                             </mat-grid-tile>
                             <mat-grid-tile [colspan]="3">
@@ -212,7 +218,7 @@
                             </mat-grid-tile>   
                             <mat-grid-tile [colspan]="3">
                                 <mat-form-field class="full-width" appearance="outline">
-                                    <mat-label>Fetal Heart Rate</mat-label>
+                                    <mat-label>BMI</mat-label>
                                     <input type="text" [(ngModel)]="fetalHeartRate" class="input-text" matInput formControlName="fetalHeartRate" placeholder="(85-210) bpm">
                                   </mat-form-field>
                             </mat-grid-tile>                 
@@ -239,7 +245,7 @@
         
                             <!-- Position Column -->
                             <ng-container matColumnDef="creationDate">
-                                <th mat-header-cell *matHeaderCellDef> Execution Date </th>
+                                <th mat-header-cell *matHeaderCellDef> Date </th>
                                 <td mat-cell *matCellDef="let element"> {{element.creationDate}} </td>
                             </ng-container>
         
@@ -267,23 +273,31 @@
                                             {{type.view}}
                                           </mat-option>
                                     </mat-select>
-                                    <mat-label>Diagnosis Name</mat-label>
+                                    <mat-label>Diagnosis</mat-label>
                                 </mat-form-field>
                             </mat-grid-tile>
-                            <mat-grid-tile [colspan]="3">
+                            <!-- <mat-grid-tile [colspan]="2">
                                 <mat-form-field class="full-width" appearance="outline">
                                     <mat-label>Diagnosis Value</mat-label>
                                     <div class="patient-display">
                                         <input type="text" [(ngModel)]="diagValue" class="input-text" matInput formControlName="diagValue" placeholder="Enter value">
                                     </div>
                                   </mat-form-field>
-                            </mat-grid-tile>
+                            </mat-grid-tile> -->
                             <mat-grid-tile [colspan]="3">
                                 <mat-form-field class="full-width" appearance="outline">
-                                    <mat-label>Execution Date</mat-label>
+                                    <mat-label>Entry Date</mat-label>
                                     <input formControlName="dCreationDate" [(ngModel)]="dCreationDate" class="input-text" matInput [matDatepicker]="picker6">
                                     <mat-datepicker-toggle matSuffix [for]="picker6"></mat-datepicker-toggle>
                                     <mat-datepicker #picker6></mat-datepicker>
+                                 </mat-form-field>
+                            </mat-grid-tile>
+                            <mat-grid-tile [colspan]="3">
+                                <mat-form-field class="full-width" appearance="outline">
+                                    <mat-label>Date</mat-label>
+                                    <input formControlName="dEntryDate" [(ngModel)]="dEntryDate" class="input-text" matInput [matDatepicker]="picker7">
+                                    <mat-datepicker-toggle matSuffix [for]="picker7"></mat-datepicker-toggle>
+                                    <mat-datepicker #picker7></mat-datepicker>
                                  </mat-form-field>
                             </mat-grid-tile>
                             <mat-grid-tile [colspan]="3">
@@ -304,19 +318,19 @@
                       
                           <!-- Weight Column -->
                           <ng-container matColumnDef="diagName">
-                            <th mat-header-cell *matHeaderCellDef> Diagnosis Name </th>
+                            <th mat-header-cell *matHeaderCellDef> Diagnosis </th>
                             <td mat-cell *matCellDef="let element"> {{element.diagName}} </td>
                           </ng-container>
                       
                           <!-- Symbol Column -->
-                          <ng-container matColumnDef="diagValue">
-                            <th mat-header-cell *matHeaderCellDef> Diagnosis Value </th>
-                            <td mat-cell *matCellDef="let element"> {{element.diagValue}} </td>
+                          <ng-container matColumnDef="diagDate">
+                            <th mat-header-cell *matHeaderCellDef> Date </th>
+                            <td mat-cell *matCellDef="let element"> {{element.diagDate}} </td>
                           </ng-container>
     
                            <!-- Position Column -->
                            <ng-container matColumnDef="creationDate">
-                            <th mat-header-cell *matHeaderCellDef> Execution Date </th>
+                            <th mat-header-cell *matHeaderCellDef> Entry Date </th>
                             <td mat-cell *matCellDef="let element"> {{element.creationDate}} </td>
                           </ng-container>
 
@@ -340,7 +354,7 @@
                         <mat-grid-list cols="12" rowHeight="65px">
                             <mat-grid-tile [colspan]="3">
                                 <mat-form-field class="full-width" appearance="outline">
-                                    <mat-select [(ngModel)]="labDiaType" formControlName="labDiaType">
+                                    <mat-select (selectionChange)="selectLabType($event)" [(ngModel)]="labDiaType" formControlName="labDiaType">
                                         <mat-option *ngFor="let type of labList" [value]="type.value">
                                             {{type.view}}
                                         </mat-option>
@@ -353,13 +367,13 @@
                                     <mat-label>Lab Value</mat-label>
                                     <div class="patient-display">
                                         <input type="number" [(ngModel)]="labValue" class="input-text" matInput formControlName="labValue" placeholder="Enter value">
-                                        <span>%</span>
+                                        <span>{{valueType}}</span>
                                     </div>
                                   </mat-form-field>
                             </mat-grid-tile>
                             <mat-grid-tile [colspan]="3">
                                 <mat-form-field class="full-width" appearance="outline">
-                                    <mat-label>Execution Date</mat-label>
+                                    <mat-label>Date</mat-label>
                                     <input formControlName="lCreationDate" [(ngModel)]="lCreationDate" class="input-text" matInput [matDatepicker]="picker">
                                     <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
                                     <mat-datepicker #picker></mat-datepicker>
@@ -395,7 +409,7 @@
     
                            <!-- Position Column -->
                            <ng-container matColumnDef="creationDate">
-                            <th mat-header-cell *matHeaderCellDef> Execution Date </th>
+                            <th mat-header-cell *matHeaderCellDef> Date </th>
                             <td mat-cell *matCellDef="let element"> {{element.creationDate}} </td>
                           </ng-container>
 
@@ -439,7 +453,7 @@
                             </mat-grid-tile>
                             <mat-grid-tile [colspan]="3">
                                 <mat-form-field class="full-width" appearance="outline">
-                                    <mat-label>Execution Date</mat-label>
+                                    <mat-label>Date</mat-label>
                                     <input formControlName="vCreationDate" [(ngModel)]="vCreationDate"  class="input-text" matInput [matDatepicker]="picker2">
                                     <mat-datepicker-toggle matSuffix [for]="picker2">
                                         <mat-icon style="font-size: 30px;" matDatepickerToggleIcon>keyboard_arrow_down</mat-icon>
@@ -477,7 +491,7 @@
     
                            <!-- Position Column -->
                            <ng-container matColumnDef="creationDate">
-                            <th mat-header-cell *matHeaderCellDef> Execution Date </th>
+                            <th mat-header-cell *matHeaderCellDef> Date </th>
                             <td mat-cell *matCellDef="let element"> {{element.creationDate}} </td>
                           </ng-container>
 
@@ -521,7 +535,7 @@
                             </mat-grid-tile>
                             <mat-grid-tile [colspan]="3">
                                 <mat-form-field class="full-width" appearance="outline">
-                                    <mat-label>Execution Date</mat-label>
+                                    <mat-label>Date</mat-label>
                                     <input formControlName="sCreationDate" [(ngModel)]="sCreationDate" class="input-text" matInput [matDatepicker]="picker3">
                                     <mat-datepicker-toggle matSuffix [for]="picker3">
                                         <mat-icon style="font-size: 30px;" matDatepickerToggleIcon>keyboard_arrow_down</mat-icon>
@@ -559,7 +573,7 @@
     
                            <!-- Position Column -->
                            <ng-container matColumnDef="creationDate">
-                            <th mat-header-cell *matHeaderCellDef> Execution Date </th>
+                            <th mat-header-cell *matHeaderCellDef> Date </th>
                             <td mat-cell *matCellDef="let element"> {{element.creationDate}} </td>
                           </ng-container>
 
